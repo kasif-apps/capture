@@ -1,0 +1,28 @@
+.wrapper {
+  resize: vertical;
+  background-color: #e0e0e0;
+  padding: 10px;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+.captureField {
+  position: absolute;
+  background-color: #102372;
+  opacity: 0.3;
+  z-index: 99;
+}
+
+.box {
+  background-color: #d0d0d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
+}
+
+.captured {
+  outline: 1px solid red;
+}
