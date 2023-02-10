@@ -1,5 +1,5 @@
 {
-  "name": "capture",
+  "name": "@kasif-apps/capture",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,10 +12,11 @@
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "storybook": "^6.5.16"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "storybook": "^6.5.16",
+    "vite-plugin-dts": "^1.7.2",
     "@babel/core": "^7.20.12",
     "@storybook/addon-actions": "^6.5.16",
     "@storybook/addon-essentials": "^6.5.16",
@@ -28,8 +29,6 @@
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react": "^3.1.0",
     "babel-loader": "^8.3.0",
-    "typescript": "^4.9.3",
-    "vite": "^4.1.0",
     "eslint": "^8.29.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^17.0.0",
@@ -38,6 +37,39 @@
     "eslint-plugin-jsx-a11y": "^6.6.1",
     "eslint-plugin-react": "^7.31.11",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-testing-library": "^5.9.1"
-  }
+    "eslint-plugin-testing-library": "^5.9.1",
+    "typescript": "^4.9.3",
+    "vite": "^4.1.0"
+  },
+  "license": "MIT",
+  "sideEffects": false,
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/kasif"
+  },
+  "authors": [
+    "Muhammed Ali CAN"
+  ],
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/capture.umd.js",
+  "module": "./dist/capture.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/capture.es.js",
+      "require": "./dist/capture.umd.js"
+    }
+  },
+  "description": "Simple global state synchronization and management tool",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kasif-apps/capture"
+  },
+  "homepage": "https://github.com/kasif-apps/capture",
+  "bugs": {
+    "url": "https://github.com/kasif-apps/capture/issues"
+  },
+  "keywords": []
 }
