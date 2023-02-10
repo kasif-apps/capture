@@ -1,11 +1,22 @@
 .wrapper {
-  resize: vertical;
   background-color: #e0e0e0;
   padding: 10px;
   box-sizing: border-box;
   font-family: Arial, Helvetica, sans-serif;
   overflow: hidden;
   user-select: none;
+}
+
+.resizeVertical {
+  resize: vertical;
+}
+
+.resizeHorizontal {
+  resize: horizontal;
+}
+
+.resizeBoth {
+  resize: both;
 }
 
 .captureField {
@@ -24,5 +35,30 @@
 }
 
 .captured {
-  outline: 1px solid red;
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
+.itemsWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.item {
+  background-color: #d0d0d0;
+  padding: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 60px;
+  height: 60px;
+  aspect-ratio: 1/1;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selectedItem {
+  background-color: rgba(255, 0, 0, 0.1);
 }

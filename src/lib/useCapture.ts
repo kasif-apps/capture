@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { Area, Vector2D } from './math';
 import { useResizeObserver } from './useResizeObserver';
-import { hasDataAttribute } from './util';
+import { generateId, hasDataAttribute } from './util';
 
 export interface CaptureOptions {
-  onCapture: (area: Area, updated: boolean) => void;
+  onCapture?: (area: Area, updated: boolean) => void;
   onCaptureEnd?: (area: Area) => void;
   onBeforeCapture?: (area: Area) => void;
   onBeforeCaptureEnd?: (area: Area) => void;
@@ -13,10 +13,11 @@ export interface CaptureOptions {
 export interface CaptureChangeEvent {
   area: Area;
   captured: boolean;
+  id: string;
 }
 
 export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
-  const id = `capture-${Math.random().toString(36).substr(2, 9)}`;
+  const id = generateId();
   const [ref, rect] = useResizeObserver<T>();
   const isDragging = useRef(false);
   const area = useRef(new Area(new Vector2D(0, 0), new Vector2D(0, 0)));
@@ -33,10 +34,11 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
 
   const notifyCapturables = (bypass = false) => {
     capturables.current.forEach((element) => {
+      const id = element.getAttribute('data-capture-target');
       if (bypass) {
         element.dispatchEvent(
           new CustomEvent('capture-change', {
-            detail: { area: area.current, captured: false },
+            detail: { area: area.current, captured: false, id },
           })
         );
         return;
@@ -46,13 +48,13 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
       if (intersects) {
         element.dispatchEvent(
           new CustomEvent('capture-change', {
-            detail: { area: area.current, captured: true },
+            detail: { area: area.current, captured: true, id },
           })
         );
       } else {
         element.dispatchEvent(
           new CustomEvent('capture-change', {
-            detail: { area: area.current, captured: false },
+            detail: { area: area.current, captured: false, id },
           })
         );
       }
@@ -109,7 +111,9 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
       const animate = () => {
         if (isDragging.current) {
           area.current.set(start.current, end.current);
-          options.onCapture(area.current, shouldDispatch.current);
+          if (options.onCapture) {
+            options.onCapture(area.current, shouldDispatch.current);
+          }
           shouldDispatch.current = false;
         }
 
@@ -148,13 +152,13 @@ export function useNonCaptureSource<T extends HTMLElement>() {
 
 export function useCaptureTarget<T extends HTMLElement>(
   id: string,
-  onCaptureChange: (captured: boolean, area: Area) => void
+  onCaptureChange: (event: CustomEvent<CaptureChangeEvent>) => void
 ) {
   const ref = useRef<T>(null);
 
   useEffect(() => {
     const handleCaptureChange = (event: CustomEvent<CaptureChangeEvent>) => {
-      onCaptureChange(event.detail.captured, event.detail.area);
+      onCaptureChange(event);
     };
 
     if (ref.current) {
