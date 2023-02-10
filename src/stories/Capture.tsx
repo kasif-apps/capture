@@ -1,15 +1,17 @@
 import React from 'react';
 import { useCallback } from 'react';
 import { useRef, useState } from 'react';
-import { CaptureTarget } from '../lib/CaptureTarget';
+
 import {
+  CaptureTarget,
   CaptureEdgeEvent,
   CaptureTickEvent,
   useCapture,
   useCaptureTarget,
   useNonCaptureSource,
-} from '../lib/useCapture';
-import { getCapturedTargets } from '../lib/util';
+  getCapturedTargets,
+} from '../lib/index';
+
 import styles from './Capture.module.css';
 
 export const Capture: React.FC<{ type: 'basic' | 'grid' }> = (props) => {
@@ -40,10 +42,7 @@ export const BasicCapture: React.FC<{}> = () => {
 
   return (
     <>
-      <div
-        className={[styles.wrapper, styles.vertical].join(' ')}
-        ref={ref}
-      >
+      <div className={[styles.wrapper, styles.vertical].join(' ')} ref={ref}>
         <h1>Capture Source</h1>
         <p ref={captureTarget}>Capturable element</p>
         <p>Non capturable element</p>
@@ -103,10 +102,7 @@ export const GridCapture: React.FC<{}> = () => {
   });
 
   return (
-    <div
-      className={[styles.wrapper, styles.resizeBoth].join(' ')}
-      ref={ref}
-    >
+    <div className={[styles.wrapper, styles.resizeBoth].join(' ')} ref={ref}>
       <h1>Capture Source</h1>
       <div className={styles.itemsWrapper}>
         {Array(50)
@@ -118,9 +114,15 @@ export const GridCapture: React.FC<{}> = () => {
                 role="button"
                 onClick={(e) => {
                   if (e.shiftKey) {
-                    setStoredItems((storedItems) =>
-                      Array.from(new Set([...storedItems, `capture-target-${i}`]))
-                    );
+                    if (storedItems.includes(`capture-target-${i}`)) {
+                      setStoredItems((storedItems) =>
+                        storedItems.filter((item) => item !== `capture-target-${i}`)
+                      );
+                    } else {
+                      setStoredItems((storedItems) =>
+                        Array.from(new Set([...storedItems, `capture-target-${i}`]))
+                      );
+                    }
                   } else {
                     setStoredItems([`capture-target-${i}`]);
                   }
