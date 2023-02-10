@@ -71,8 +71,8 @@ export const GridCapture: React.FC<{}> = () => {
   const [storedItems, setStoredItems] = useState<string[]>([]);
   const shouldKeep = useRef(false);
 
-  const handleCaptureStart = useCallback((event: CaptureEdgeEvent) => {
-    if (event.mouseEvent.shiftKey) {
+  const handleCaptureStart = useCallback((event: CustomEvent<CaptureEdgeEvent>) => {
+    if (event.detail.mouseEvent.shiftKey) {
       shouldKeep.current = true;
     }
 
@@ -81,7 +81,7 @@ export const GridCapture: React.FC<{}> = () => {
     }
   }, []);
 
-  const handleCaptureEnd = useCallback((e: CaptureEdgeEvent) => {
+  const handleCaptureEnd = useCallback(() => {
     onCaptureEnd();
 
     const targets = getCapturedTargets().map((t) => t.id);
@@ -146,8 +146,9 @@ function useCaptureField() {
   const ref = useRef<HTMLDivElement>(null);
 
   const onCapture = useCallback(
-    ({ area, updated }: CaptureTickEvent) => {
-      if (ref.current && updated) {
+    (event: CustomEvent<CaptureTickEvent>) => {
+      if (ref.current && event.detail.updated) {
+        const { area } = event.detail;
         ref.current.style.left = `${area.topLeft.x}px`;
         ref.current.style.top = `${area.topLeft.y}px`;
         ref.current.style.width = `${area.width}px`;

@@ -4,9 +4,9 @@ import { useResizeObserver } from './useResizeObserver';
 import { generateId, getScroll, hasDataAttribute } from './util';
 
 export interface CaptureOptions {
-  onCapture?: (event: CaptureTickEvent) => void;
-  onCaptureEnd?: (event: CaptureEdgeEvent) => void;
-  onCaptureStart?: (event: CaptureEdgeEvent) => void;
+  onCapture?: (event: CustomEvent<CaptureTickEvent>) => void;
+  onCaptureEnd?: (event: CustomEvent<CaptureEdgeEvent>) => void;
+  onCaptureStart?: (event: CustomEvent<CaptureEdgeEvent>) => void;
 }
 
 export interface CaptureChangeEvent {
@@ -98,7 +98,11 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
           !hasDataAttribute(event, 'data-non-capture-source')
         ) {
           if (options.onCaptureStart) {
-            options.onCaptureStart({ area: area.current, mouseEvent: event });
+            options.onCaptureStart(
+              new CustomEvent('capture-start', {
+                detail: { area: area.current, mouseEvent: event },
+              })
+            );
           }
           start.current.set(event.pageX, event.pageY);
           end.current.set(event.pageX, event.pageY);
@@ -110,9 +114,11 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
         if (isDragging.current) {
           isDragging.current = false;
           area.current.set(start.current, end.current);
-  
+
           if (options.onCaptureEnd) {
-            options.onCaptureEnd({ area: area.current, mouseEvent: event });
+            options.onCaptureEnd(
+              new CustomEvent('capture-end', { detail: { area: area.current, mouseEvent: event } })
+            );
           }
           start.current.set(0, 0);
           start.current.set(0, 0);
@@ -143,11 +149,15 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
         if (isDragging.current) {
           area.current.set(start.current, end.current);
           if (options.onCapture) {
-            options.onCapture({
-              area: area.current,
-              updated: shouldDispatch.current,
-              mouseEvent: lastEvent.current!,
-            });
+            options.onCapture(
+              new CustomEvent('capture', {
+                detail: {
+                  area: area.current,
+                  updated: shouldDispatch.current,
+                  mouseEvent: lastEvent.current!,
+                },
+              })
+            );
           }
           shouldDispatch.current = false;
         }
