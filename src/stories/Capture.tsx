@@ -1,20 +1,31 @@
+import React from 'react';
+import { useCallback } from 'react';
 import { useRef, useState } from 'react';
 import { CaptureTarget } from '../lib/CaptureTarget';
 import { Area } from '../lib/math';
-import { useCapture, useCaptureTarget, useNonCaptureSource } from '../lib/useCapture';
+import {
+  CaptureChangeEvent,
+  CaptureEdgeEvent,
+  CaptureTickEvent,
+  useCapture,
+  useCaptureTarget,
+  useNonCaptureSource,
+} from '../lib/useCapture';
+import { getCapturedTargets } from '../lib/util';
 import styles from './Capture.module.css';
 
-export const Capture: React.FC<{ type: 'basic' | 'mutltiple' }> = (props) => {
+export const Capture: React.FC<{ type: 'basic' | 'grid' }> = (props) => {
   if (props.type === 'basic') {
     return <BasicCapture />;
   } else {
-    return <MultipleCapture />;
+    return <GridCapture />;
   }
 };
 
 export const BasicCapture: React.FC<{}> = () => {
   const [captured, setCaptured] = useState(false);
   const { ref: captureFieldRef, onCapture, onCaptureEnd } = useCaptureField();
+  const someRef = useRef(null);
 
   const { ref } = useCapture<HTMLDivElement>({
     onCapture,
@@ -47,7 +58,7 @@ export const BasicCapture: React.FC<{}> = () => {
             setCaptured(event.detail.captured);
           }}
         >
-          <div className={captured ? styles.captured : ''}>
+          <div ref={someRef} className={captured ? styles.captured : ''}>
             <p>Capturable element</p>
             <b>hi</b>
           </div>
@@ -59,10 +70,41 @@ export const BasicCapture: React.FC<{}> = () => {
   );
 };
 
-export const MultipleCapture: React.FC<{}> = () => {
+export const GridCapture: React.FC<{}> = () => {
   const { ref: captureFieldRef, onCapture, onCaptureEnd } = useCaptureField();
-  const { ref } = useCapture<HTMLDivElement>({ onCapture, onCaptureEnd });
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [storedItems, setStoredItems] = useState<string[]>([]);
+  const shouldKeep = useRef(false);
+
+  const handleCaptureStart = useCallback((event: CaptureEdgeEvent) => {
+    if (event.mouseEvent.shiftKey) {
+      shouldKeep.current = true;
+    }
+
+    if (!shouldKeep.current) {
+      setStoredItems([]);
+    }
+  }, []);
+
+  const handleCaptureEnd = useCallback((e: CaptureEdgeEvent) => {
+    onCaptureEnd();
+
+    const targets = getCapturedTargets().map((t) => t.id);
+    console.log(targets, shouldKeep.current);
+
+    if (shouldKeep.current) {
+      setStoredItems((storedItems) => [...storedItems, ...targets]);
+    } else {
+      setStoredItems(targets);
+    }
+
+    shouldKeep.current = false;
+  }, []);
+
+  const { ref } = useCapture<HTMLDivElement>({
+    onCapture,
+    onCaptureEnd: handleCaptureEnd,
+    onCaptureStart: handleCaptureStart,
+  });
 
   return (
     <div
@@ -75,22 +117,22 @@ export const MultipleCapture: React.FC<{}> = () => {
         {Array(50)
           .fill(0)
           .map((_, i) => (
-            <CaptureTarget
-              id={`capture-target-${i}`}
-              onCaptureStateChange={(e) => {
-                if (e.detail.captured) {
-                  setSelectedItems((prev) => Array.from(new Set([...prev, e.detail.id])));
-                } else {
-                  setSelectedItems((prev) => prev.filter((id) => id !== e.detail.id));
-                }
-              }}
-              key={i}
-            >
+            <CaptureTarget id={`capture-target-${i}`} key={i}>
               <div
                 data-non-capture-source
+                role="button"
+                onClick={(e) => {
+                  if (e.shiftKey) {
+                    setStoredItems((storedItems) =>
+                      Array.from(new Set([...storedItems, `capture-target-${i}`]))
+                    );
+                  } else {
+                    setStoredItems([`capture-target-${i}`]);
+                  }
+                }}
                 className={[
                   styles.item,
-                  selectedItems.includes(`capture-target-${i}`) ? styles.selectedItem : '',
+                  storedItems.includes(`capture-target-${i}`) ? styles.selected : '',
                 ].join(' ')}
               >
                 <p>Item {i}</p>
@@ -106,23 +148,26 @@ export const MultipleCapture: React.FC<{}> = () => {
 function useCaptureField() {
   const ref = useRef<HTMLDivElement>(null);
 
-  const onCapture = (area: Area, updated: boolean) => {
-    if (ref.current && updated) {
-      ref.current.style.left = `${area.topLeft.x}px`;
-      ref.current.style.top = `${area.topLeft.y}px`;
-      ref.current.style.width = `${area.width}px`;
-      ref.current.style.height = `${area.height}px`;
-    }
-  };
+  const onCapture = useCallback(
+    ({ area, updated }: CaptureTickEvent) => {
+      if (ref.current && updated) {
+        ref.current.style.left = `${area.topLeft.x}px`;
+        ref.current.style.top = `${area.topLeft.y}px`;
+        ref.current.style.width = `${area.width}px`;
+        ref.current.style.height = `${area.height}px`;
+      }
+    },
+    [ref.current]
+  );
 
-  const onCaptureEnd = () => {
+  const onCaptureEnd = useCallback(() => {
     if (ref.current) {
       ref.current.style.left = '0px';
       ref.current.style.top = '0px';
       ref.current.style.width = '0px';
       ref.current.style.height = '0px';
     }
-  };
+  }, [ref.current]);
 
   return {
     ref: ref,

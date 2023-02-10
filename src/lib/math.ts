@@ -123,8 +123,12 @@ export class Area {
     );
   }
 
-  static fromElement(element: HTMLElement) {
-    const rect = element.getBoundingClientRect();
+  static fromElement(element: HTMLElement, buffer = new Vector2D(0, 0)) {
+    const boundingRect = element.getBoundingClientRect();
+    const rect = { top: boundingRect.top, left: boundingRect.left, bottom: boundingRect.bottom, right: boundingRect.right };
+    rect.top += buffer.y;
+    rect.left += buffer.x;
+
     return new Area(new Vector2D(rect.left, rect.top), new Vector2D(rect.right, rect.bottom));
   }
 }

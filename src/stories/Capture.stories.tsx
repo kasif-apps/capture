@@ -15,8 +15,8 @@ Basic.args = {
   type: 'basic',
 };
 
-export const Multiple = Template.bind({});
+export const Grid = Template.bind({});
 
-Multiple.args = {
-  type: 'mutltiple',
+Grid.args = {
+  type: 'grid',
 };

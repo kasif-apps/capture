@@ -1,19 +1,30 @@
 import { useEffect, useRef } from 'react';
 import { Area, Vector2D } from './math';
 import { useResizeObserver } from './useResizeObserver';
-import { generateId, hasDataAttribute } from './util';
+import { generateId, getScroll, hasDataAttribute } from './util';
 
 export interface CaptureOptions {
-  onCapture?: (area: Area, updated: boolean) => void;
-  onCaptureEnd?: (area: Area) => void;
-  onBeforeCapture?: (area: Area) => void;
-  onBeforeCaptureEnd?: (area: Area) => void;
+  onCapture?: (event: CaptureTickEvent) => void;
+  onCaptureEnd?: (event: CaptureEdgeEvent) => void;
+  onCaptureStart?: (event: CaptureEdgeEvent) => void;
 }
 
 export interface CaptureChangeEvent {
   area: Area;
   captured: boolean;
   id: string;
+  mouseEvent: MouseEvent;
+}
+
+export interface CaptureTickEvent {
+  area: Area;
+  updated: boolean;
+  mouseEvent: MouseEvent;
+}
+
+export interface CaptureEdgeEvent {
+  area: Area;
+  mouseEvent: MouseEvent;
 }
 
 export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
@@ -24,6 +35,7 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
   const start = useRef(new Vector2D(0, 0));
   const end = useRef(new Vector2D(0, 0));
   const shouldDispatch = useRef(false);
+  const lastEvent = useRef<MouseEvent | null>(null);
 
   const capturables = useRef<HTMLElement[]>([]);
 
@@ -32,31 +44,36 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
     shouldDispatch.current = false;
   };
 
-  const notifyCapturables = (bypass = false) => {
+  const notifyCapturables = (event: MouseEvent, bypass = false) => {
     capturables.current.forEach((element) => {
       const id = element.getAttribute('data-capture-target');
+      const captured = !!element.getAttribute('data-captured');
+
       if (bypass) {
         element.dispatchEvent(
           new CustomEvent('capture-change', {
-            detail: { area: area.current, captured: false, id },
+            detail: { area: area.current, captured: false, id, mouseEvent: event },
           })
         );
         return;
       }
 
-      const intersects = Area.fromElement(element).intersects(area.current);
-      if (intersects) {
+      const intersects = Area.fromElement(element, getScroll(element)).intersects(area.current);
+
+      if (intersects && captured) {
         element.dispatchEvent(
           new CustomEvent('capture-change', {
-            detail: { area: area.current, captured: true, id },
+            detail: { area: area.current, captured: true, id, mouseEvent: event },
           })
         );
+        element.setAttribute('data-captured', 'true');
       } else {
         element.dispatchEvent(
           new CustomEvent('capture-change', {
-            detail: { area: area.current, captured: false, id },
+            detail: { area: area.current, captured: false, id, mouseEvent: event },
           })
         );
+        element.setAttribute('data-captured', 'false');
       }
     });
   };
@@ -70,27 +87,40 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
         document.querySelectorAll(`[data-capture-source-id=${id}] [data-capture-target]`)
       );
 
+      capturables.current.forEach((element) => {
+        element.setAttribute('data-captured', 'false');
+      });
+
       const handleMouseDown = (event: MouseEvent) => {
-        notifyCapturables(true);
+        notifyCapturables(event, true);
         if (
           hasDataAttribute(event, 'data-capture-source') &&
           !hasDataAttribute(event, 'data-non-capture-source')
         ) {
+          if (options.onCaptureStart) {
+            options.onCaptureStart({ area: area.current, mouseEvent: event });
+          }
           start.current.set(event.pageX, event.pageY);
           end.current.set(event.pageX, event.pageY);
           isDragging.current = true;
         }
       };
 
-      const handleMouseUp = () => {
-        isDragging.current = false;
-        area.current.set(start.current, end.current);
+      const handleMouseUp = (event: MouseEvent) => {
+        if (isDragging.current) {
+          isDragging.current = false;
+          area.current.set(start.current, end.current);
+  
+          if (options.onCaptureEnd) {
+            options.onCaptureEnd({ area: area.current, mouseEvent: event });
+          }
+          start.current.set(0, 0);
+          start.current.set(0, 0);
 
-        if (options.onCaptureEnd) {
-          options.onCaptureEnd(area.current);
+          capturables.current.forEach((element) => {
+            element.setAttribute('data-captured', 'false');
+          });
         }
-        start.current.set(0, 0);
-        start.current.set(0, 0);
       };
 
       const handleMouseMove = (event: MouseEvent) => {
@@ -98,7 +128,8 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
           end.current.set(event.pageX, event.pageY);
           area.current.set(start.current, end.current);
           shouldDispatch.current = true;
-          notifyCapturables();
+          notifyCapturables(event);
+          lastEvent.current = event;
         }
       };
 
@@ -112,7 +143,11 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
         if (isDragging.current) {
           area.current.set(start.current, end.current);
           if (options.onCapture) {
-            options.onCapture(area.current, shouldDispatch.current);
+            options.onCapture({
+              area: area.current,
+              updated: shouldDispatch.current,
+              mouseEvent: lastEvent.current!,
+            });
           }
           shouldDispatch.current = false;
         }

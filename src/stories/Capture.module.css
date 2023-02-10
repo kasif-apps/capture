@@ -59,6 +59,6 @@
   justify-content: center;
 }
 
-.selectedItem {
+.item[data-captured="true"], .selected {
   background-color: rgba(255, 0, 0, 0.1);
 }
