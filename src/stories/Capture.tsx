@@ -2,9 +2,7 @@ import React from 'react';
 import { useCallback } from 'react';
 import { useRef, useState } from 'react';
 import { CaptureTarget } from '../lib/CaptureTarget';
-import { Area } from '../lib/math';
 import {
-  CaptureChangeEvent,
   CaptureEdgeEvent,
   CaptureTickEvent,
   useCapture,
@@ -43,7 +41,6 @@ export const BasicCapture: React.FC<{}> = () => {
   return (
     <>
       <div
-        onResize={(e) => console.log(e)}
         className={[styles.wrapper, styles.vertical].join(' ')}
         ref={ref}
       >
@@ -89,7 +86,6 @@ export const GridCapture: React.FC<{}> = () => {
     onCaptureEnd();
 
     const targets = getCapturedTargets().map((t) => t.id);
-    console.log(targets, shouldKeep.current);
 
     if (shouldKeep.current) {
       setStoredItems((storedItems) => [...storedItems, ...targets]);
@@ -108,7 +104,6 @@ export const GridCapture: React.FC<{}> = () => {
 
   return (
     <div
-      onResize={(e) => console.log(e)}
       className={[styles.wrapper, styles.resizeBoth].join(' ')}
       ref={ref}
     >
