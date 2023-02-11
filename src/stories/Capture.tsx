@@ -2,17 +2,10 @@ import React from 'react';
 import { useCallback } from 'react';
 import { useRef, useState } from 'react';
 
-import {
-  CaptureTarget,
-  CaptureEdgeEvent,
-  CaptureTickEvent,
-  useCapture,
-  useCaptureTarget,
-  useNonCaptureSource,
-  getCapturedTargets,
-} from '../lib/index';
+import { CaptureEdgeEvent, CaptureTickEvent, getCapturedTargets } from '../lib/index';
 
 import styles from './Capture.module.css';
+import { useCapture, CaptureTarget } from './captureReact';
 
 export const Capture: React.FC<{ type: 'basic' | 'grid' }> = (props) => {
   if (props.type === 'basic') {
@@ -25,36 +18,30 @@ export const Capture: React.FC<{ type: 'basic' | 'grid' }> = (props) => {
 export const BasicCapture: React.FC<{}> = () => {
   const [captured, setCaptured] = useState(false);
   const { ref: captureFieldRef, onCapture, onCaptureEnd } = useCaptureField();
-  const someRef = useRef(null);
 
   const { ref } = useCapture<HTMLDivElement>({
     onCapture,
     onCaptureEnd,
-  });
-  const nonCapture = useNonCaptureSource<HTMLDivElement>();
-  const captureTarget = useCaptureTarget<HTMLParagraphElement>('10', (e) => {
-    if (e.detail.captured) {
-      captureTarget.current?.classList.add(styles.captured);
-    } else {
-      captureTarget.current?.classList.remove(styles.captured);
-    }
   });
 
   return (
     <>
       <div className={[styles.wrapper, styles.vertical].join(' ')} ref={ref}>
         <h1>Capture Source</h1>
-        <p ref={captureTarget}>Capturable element</p>
+        <CaptureTarget id="10">
+          <p className={styles.capturable}>Capturable element</p>
+        </CaptureTarget>
         <p>Non capturable element</p>
-        <div ref={nonCapture} className={styles.box}>
+        <div data-non-capture-source className={styles.box}>
           Non capture source
         </div>
         <CaptureTarget
+          id="10"
           onCaptureStateChange={(event) => {
             setCaptured(event.detail.captured);
           }}
         >
-          <div ref={someRef} className={captured ? styles.captured : ''}>
+          <div data-capture-target className={captured ? styles.captured : ''}>
             <p>Capturable element</p>
             <b>hi</b>
           </div>

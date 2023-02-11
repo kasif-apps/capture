@@ -11,11 +11,10 @@
     "build-storybook": "build-storybook",
     "serve-storybook": "serve storybook-static"
   },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "storybook": "^6.5.16",
     "vite-plugin-dts": "^1.7.2",
     "@babel/core": "^7.20.12",
@@ -63,7 +62,7 @@
       "require": "./dist/capture.umd.js"
     }
   },
-  "description": "Simple global state synchronization and management tool",
+  "description": "React field capturer utilities",
   "repository": {
     "type": "git",
     "url": "https://github.com/kasif-apps/capture"

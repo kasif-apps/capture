@@ -6,7 +6,6 @@ import dts from 'vite-plugin-dts';
 
 export default defineConfig({
   plugins: [
-    react(),
     dts({
       insertTypesEntry: true,
     }),
@@ -19,9 +18,7 @@ export default defineConfig({
       fileName: (format) => `capture.${format}.js`,
     },
     rollupOptions: {
-      external: [
-        'react',
-      ],
+      external: [],
       output: {
         globals: {},
       },

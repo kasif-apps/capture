@@ -11,10 +11,6 @@ export function hasDataAttribute(event: MouseEvent, attribute: string) {
   return result;
 }
 
-export function generateId() {
-  return `capture-${Math.random().toString(36).substr(2, 9)}`;
-}
-
 export function getScroll(element: HTMLElement): Vector2D {
   let currentElement: HTMLElement | null = element;
   let result = { x: 0, y: 0 };
