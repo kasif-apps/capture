@@ -53,7 +53,7 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
 
       if (bypass) {
         element.dispatchEvent(
-          new CustomEvent('capture-change', {
+          new CustomEvent('capture-state-change', {
             detail: { area, captured: false, id, mouseEvent: event },
           })
         );
@@ -64,14 +64,14 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
 
       if (intersects && captured) {
         element.dispatchEvent(
-          new CustomEvent('capture-change', {
+          new CustomEvent('capture-state-change', {
             detail: { area, captured: true, id, mouseEvent: event },
           })
         );
         element.setAttribute('data-captured', 'true');
       } else {
         element.dispatchEvent(
-          new CustomEvent('capture-change', {
+          new CustomEvent('capture-state-change', {
             detail: { area, captured: false, id, mouseEvent: event },
           })
         );

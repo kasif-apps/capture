@@ -62,7 +62,7 @@
       "require": "./dist/capture.umd.js"
     }
   },
-  "description": "React field capturer utilities",
+  "description": "2D field capturer utilities",
   "repository": {
     "type": "git",
     "url": "https://github.com/kasif-apps/capture"

@@ -58,6 +58,8 @@ export const GridCapture: React.FC<{}> = () => {
   const [storedItems, setStoredItems] = useState<string[]>([]);
   const shouldKeep = useRef(false);
 
+  const getID = (index: number) => `capture-target-${index}`;
+
   const handleCaptureStart = useCallback((event: CustomEvent<CaptureEdgeEvent>) => {
     if (event.detail.mouseEvent.shiftKey) {
       shouldKeep.current = true;
@@ -95,28 +97,28 @@ export const GridCapture: React.FC<{}> = () => {
         {Array(50)
           .fill(0)
           .map((_, i) => (
-            <CaptureTarget id={`capture-target-${i}`} key={i}>
+            <CaptureTarget id={getID(i)} key={i}>
               <div
                 data-non-capture-source
                 role="button"
                 onClick={(e) => {
                   if (e.shiftKey) {
-                    if (storedItems.includes(`capture-target-${i}`)) {
+                    if (storedItems.includes(getID(i))) {
                       setStoredItems((storedItems) =>
-                        storedItems.filter((item) => item !== `capture-target-${i}`)
+                        storedItems.filter((item) => item !== getID(i))
                       );
                     } else {
                       setStoredItems((storedItems) =>
-                        Array.from(new Set([...storedItems, `capture-target-${i}`]))
+                        Array.from(new Set([...storedItems, getID(i)]))
                       );
                     }
                   } else {
-                    setStoredItems([`capture-target-${i}`]);
+                    setStoredItems([getID(i)]);
                   }
                 }}
                 className={[
                   styles.item,
-                  storedItems.includes(`capture-target-${i}`) ? styles.selected : '',
+                  storedItems.includes(getID(i)) ? styles.selected : '',
                 ].join(' ')}
               >
                 <p>Item {i}</p>

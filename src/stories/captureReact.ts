@@ -43,12 +43,12 @@ export const CaptureTarget: React.FC<{
     };
 
     if (ref.current) {
-      ref.current.addEventListener('capture-change', listener as EventListener);
+      ref.current.addEventListener('capture-state-change', listener as EventListener);
     }
 
     return () => {
       if (ref.current) {
-        ref.current.removeEventListener('capture-change', listener as EventListener);
+        ref.current.removeEventListener('capture-state-change', listener as EventListener);
       }
     };
   }, [ref.current]);
