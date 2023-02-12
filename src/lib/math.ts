@@ -51,14 +51,6 @@ export class Vector2D {
   static distance(v1: Vector2D, v2: Vector2D) {
     return Math.sqrt(Math.pow(v2.x - v1.x, 2) + Math.pow(v2.y - v1.y, 2));
   }
-
-  static angle(v1: Vector2D, v2: Vector2D) {
-    return Math.atan2(v2.y - v1.y, v2.x - v1.x);
-  }
-
-  static angleDeg(v1: Vector2D, v2: Vector2D) {
-    return (Math.atan2(v2.y - v1.y, v2.x - v1.x) * 180) / Math.PI;
-  }
 }
 
 export class Area {

@@ -92,14 +92,156 @@ p.addEventListener("capture-state-change", (event: CustomEvent<CaptureChangeEven
 
 #### `createCapturer`
 
+Used to create a capture source.
+
+_Signature_
+
+```typescript
+declare function createCapturer<T extends HTMLElement>(
+  element: T
+): {
+  unsubscribe: () => void;
+  cancel: () => void;
+};
+```
+
 #### `getCapturedTargets`
+
+Used to get any captured targets at any point in time. It comes in handy with `capture-end` event listener. It takes an optional target source, if you have multiple target sources in a page it seperates the captured targets.
+
+_Signature_
+
+```typescript
+declare function getCapturedTargets(source?: HTMLElement): {
+  element: HTMLElement;
+  id: string;
+}[];
+```
 
 ### Classes
 
 #### `Vector2D`
 
+Helper class for dealing with 2 dimensional vectors.
+
+_Signature_
+
+```typescript
+declare class Vector2D {
+  x: number;
+  y: number;
+  constructor(x: number, y: number);
+  add(v: Vector2D): void;
+  subtract(v: Vector2D): void;
+  multiply(v: Vector2D): void;
+  divide(v: Vector2D): void;
+  set(x: number, y: number): void;
+  static add(v1: Vector2D, v2: Vector2D): Vector2D;
+  static subtract(v1: Vector2D, v2: Vector2D): Vector2D;
+  static multiply(v1: Vector2D, v2: Vector2D): Vector2D;
+  static divide(v1: Vector2D, v2: Vector2D): Vector2D;
+  static distance(v1: Vector2D, v2: Vector2D): number;
+}
+```
+
 #### `Area`
+
+Helper class for dealing with 2 dimensional areas
+
+_Signature_
+
+```typescript
+declare class Area {
+  start: Vector2D;
+  end: Vector2D;
+  constructor(start: Vector2D, end: Vector2D);
+  set(start: Vector2D, end: Vector2D): void;
+  is(area: Area): boolean;
+  get width(): number;
+  get height(): number;
+  get center(): Vector2D;
+  get area(): number;
+  get topLeft(): Vector2D;
+  get topRight(): Vector2D;
+  get bottomLeft(): Vector2D;
+  get bottomRight(): Vector2D;
+  get points(): [Vector2D, Vector2D, Vector2D, Vector2D];
+  intersects(area: Area): boolean;
+
+  static fromElement(element: HTMLElement, buffer?: Vector2D): Area;
+}
+```
 
 ### EventListeners
 
+#### `capture-tick`
+
+This event is dispatched upon the capture source element. It is fired every frame when the capture starts. The event has the `CustomEvent<CaptureTickEvent>` signature where the `CaptureTickEvent` is:
+
+```typescript
+interface CaptureTickEvent {
+  area: Area;
+  updated: boolean;
+  mouseEvent: MouseEvent;
+}
+```
+
+#### `capture-start`
+
+This event is dispatched upon the capture source element. It is fired once when the capture starts. The event has the `CustomEvent<CaptureEdgeEvent>` signature where the `CaptureEdgeEvent` is:
+
+```typescript
+interface CaptureEdgeEvent {
+  area: Area;
+  mouseEvent: MouseEvent;
+}
+```
+
+#### `capture-end`
+
+This event is dispatched upon the capture source element. It is fired once when the capture ends. At this point the captured targets has not been discarded so you can catch them. The event has the `CustomEvent<CaptureEdgeEvent>` signature where the `CaptureEdgeEvent` is:
+
+```typescript
+interface CaptureEdgeEvent {
+  area: Area;
+  mouseEvent: MouseEvent;
+}
+```
+
+#### `capture-state-change`
+
+This event is dispatched upon an element that has the `data-capture-target` attribute before capture creation. It is fired every frame when the capture starts. The event has the `CustomEvent<CaptureChangeEvent>` signature where the `CaptureChangeEvent` is:
+
+```typescript
+interface CaptureChangeEvent {
+  area: Area;
+  captured: boolean;
+  id: string; // provided id to the 'data-capture-target' attribute
+  mouseEvent: MouseEvent;
+}
+```
+
 ### Data Attributes
+
+#### `data-capture-target`
+
+You can provide this data attribute to any HTML element to make them capturable. You need to make sure that in single a capture source, every target has a unique id.
+
+eg:
+
+```html
+<div data-capture-target="1"></div>
+<p data-capture-target="2"></p>
+<button data-capture-target="3"></button>
+```
+
+#### `data-non-capture-source`
+
+You may want to set some areas where the user **cannot** start a capture that is inside the capture source. You can pass the `data-non-capture-source` attribute to disable the initiation of a capture inside a certain area.
+
+```html
+<div data-capture-target="1"></div>
+<p data-capture-target="2"></p>
+<div data-non-capture-source>Non capture source</div>
+<button data-capture-target="3"></button>
+```

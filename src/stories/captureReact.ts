@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 import {
-  CaptureOptions,
   createCapturer,
   CaptureChangeEvent,
   CaptureTickEvent,

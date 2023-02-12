@@ -24,8 +24,10 @@ export function getScroll(element: HTMLElement): Vector2D {
   return new Vector2D(result.x, result.y);
 }
 
-export function getCapturedTargets(): { element: HTMLElement; id: string }[] {
-  const result = Array.from(document.querySelectorAll('[data-captured="true"]')).filter(
+export function getCapturedTargets(source?: HTMLElement): { element: HTMLElement; id: string }[] {
+  const s = source || document.body;
+
+  const result = Array.from(s.querySelectorAll('[data-captured="true"]')).filter(
     (element) => element instanceof HTMLElement
   ) as HTMLElement[];
 
