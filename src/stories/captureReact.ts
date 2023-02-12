@@ -19,7 +19,7 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
 
   useEffect(() => {
     if (ref.current) {
-      const { unsubscribe, cancel: c } = createCapturer(ref.current);
+      const { destroy, cancel: c } = createCapturer(ref.current);
       cancel.current = c;
 
       if (options.onCaptureTick) {
@@ -35,7 +35,7 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
       }
 
       return () => {
-        unsubscribe();
+        destroy();
 
         if (ref.current) {
           ref.current.removeEventListener('capture-tick', options.onCaptureTick as EventListener);

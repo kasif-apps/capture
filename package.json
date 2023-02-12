@@ -71,5 +71,16 @@
   "bugs": {
     "url": "https://github.com/kasif-apps/capture/issues"
   },
-  "keywords": []
+  "keywords": [
+    "capture",
+    "field",
+    "2d",
+    "canvas",
+    "webgl",
+    "vanilla",
+    "react",
+    "vue",
+    "angular",
+    "svelte"
+  ]
 }

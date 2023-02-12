@@ -35,11 +35,6 @@ export function createCapturer<T extends HTMLElement>(element: T) {
     element.setAttribute('data-captured', 'false');
   });
 
-  const cancel = () => {
-    isDragging = false;
-    shouldDispatch = false;
-  };
-
   const notifyCapturables = (event: MouseEvent, bypass = false) => {
     capturables.forEach((element) => {
       const id = element.getAttribute('data-capture-target');
@@ -124,34 +119,44 @@ export function createCapturer<T extends HTMLElement>(element: T) {
   document.addEventListener('mousemove', handleMouseMove);
 
   let animation: number;
+  (() => {
+    const frame = () => {
+      if (isDragging) {
+        area.set(start, end);
+        element.dispatchEvent(
+          new CustomEvent('capture-tick', {
+            detail: {
+              area: area,
+              updated: shouldDispatch,
+              mouseEvent: lastEvent!,
+            },
+          })
+        );
+        shouldDispatch = false;
+      }
 
-  const animate = () => {
-    if (isDragging) {
-      area.set(start, end);
-      element.dispatchEvent(
-        new CustomEvent('capture-tick', {
-          detail: {
-            area: area,
-            updated: shouldDispatch,
-            mouseEvent: lastEvent!,
-          },
-        })
-      );
-      shouldDispatch = false;
-    }
+      animation = requestAnimationFrame(frame);
+    };
 
-    animation = requestAnimationFrame(animate);
-  };
-
-  animation = requestAnimationFrame(animate);
+    animation = requestAnimationFrame(frame);
+  })();
 
   return {
-    unsubscribe: () => {
+    destroy: () => {
       cancelAnimationFrame(animation);
       document.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mousemove', handleMouseMove);
+      element.removeAttribute('data-capture-source');
+      capturables.forEach((element) => {
+        element.removeAttribute('data-captured');
+      });
+      capturables = [];
+      lastEvent = null;
     },
-    cancel,
+    cancel: () => {
+      isDragging = false;
+      shouldDispatch = false;
+    },
   };
 }
