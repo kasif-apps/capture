@@ -126,4 +126,11 @@ export class Area {
 
     return new Area(new Vector2D(rect.left, rect.top), new Vector2D(rect.right, rect.bottom));
   }
+
+  static fromDOMRect(rect: DOMRect, buffer = new Vector2D(0, 0)) {
+    return new Area(
+      new Vector2D(rect.left + buffer.x, rect.top + buffer.y),
+      new Vector2D(rect.right + buffer.x, rect.bottom + buffer.y)
+    );
+  }
 }

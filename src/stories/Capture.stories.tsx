@@ -26,3 +26,9 @@ export const Scroll = Template.bind({});
 Scroll.args = {
   type: 'scroll',
 };
+
+export const LoadTest = Template.bind({});
+
+LoadTest.args = {
+  type: 'load-test',
+};

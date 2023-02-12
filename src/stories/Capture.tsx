@@ -7,7 +7,7 @@ import { CaptureEdgeEvent, CaptureTickEvent, getCapturedTargets } from '../lib/i
 import styles from './Capture.module.css';
 import { useCapture, CaptureTarget } from './captureReact';
 
-export const Capture: React.FC<{ type: 'basic' | 'grid' | 'scroll' }> = (props) => {
+export const Capture: React.FC<{ type: 'basic' | 'grid' | 'scroll' | 'load-test' }> = (props) => {
   switch (props.type) {
     case 'basic':
       return <BasicCapture />;
@@ -15,6 +15,8 @@ export const Capture: React.FC<{ type: 'basic' | 'grid' | 'scroll' }> = (props) 
       return <GridCapture />;
     case 'scroll':
       return <ScrollCapture />;
+    case 'load-test':
+      return <LoadTestCapture />;
     default:
       return <BasicCapture />;
   }
@@ -178,6 +180,84 @@ export const ScrollCapture: React.FC<{}> = () => {
       <h1>Capture Source</h1>
       <div className={[styles.itemsWrapper, styles.scroll].join(' ')}>
         {Array(50)
+          .fill(0)
+          .map((_, i) => (
+            <CaptureTarget id={getID(i)} key={i}>
+              <div
+                data-non-capture-source
+                role="button"
+                onClick={(e) => {
+                  if (e.shiftKey) {
+                    if (storedItems.includes(getID(i))) {
+                      setStoredItems((storedItems) =>
+                        storedItems.filter((item) => item !== getID(i))
+                      );
+                    } else {
+                      setStoredItems((storedItems) =>
+                        Array.from(new Set([...storedItems, getID(i)]))
+                      );
+                    }
+                  } else {
+                    setStoredItems([getID(i)]);
+                  }
+                }}
+                className={[
+                  styles.item,
+                  storedItems.includes(getID(i)) ? styles.selected : '',
+                ].join(' ')}
+              >
+                <p>Item {i}</p>
+              </div>
+            </CaptureTarget>
+          ))}
+      </div>
+      <div ref={captureFieldRef} className={styles.captureField}></div>
+    </div>
+  );
+};
+
+export const LoadTestCapture: React.FC<{}> = () => {
+  const { ref: captureFieldRef, onCaptureTick, onCaptureEnd } = useCaptureField();
+  const [storedItems, setStoredItems] = useState<string[]>([]);
+  const shouldKeep = useRef(false);
+
+  const getID = (index: number) => `capture-target-${index}`;
+
+  const handleCaptureStart = useCallback((event: CustomEvent<CaptureEdgeEvent>) => {
+    if (event.detail.mouseEvent.shiftKey) {
+      shouldKeep.current = true;
+    }
+
+    if (!shouldKeep.current) {
+      setStoredItems([]);
+    }
+  }, []);
+
+  const handleCaptureEnd = useCallback(() => {
+    onCaptureEnd();
+
+    const targets = getCapturedTargets().map((t) => t.id);
+
+    if (shouldKeep.current) {
+      setStoredItems((storedItems) => [...storedItems, ...targets]);
+    } else {
+      setStoredItems(targets);
+    }
+
+    shouldKeep.current = false;
+  }, []);
+
+  const { ref } = useCapture<HTMLDivElement>({
+    onCaptureTick,
+    onCaptureEnd: handleCaptureEnd,
+    onCaptureStart: handleCaptureStart,
+  });
+
+  return (
+    <div className={[styles.wrapper, styles.resizeBoth].join(' ')} ref={ref}>
+      <h1>Capture Source</h1>
+      <div className={styles.itemsWrapper}>
+        {Array(1000)
           .fill(0)
           .map((_, i) => (
             <CaptureTarget id={getID(i)} key={i}>

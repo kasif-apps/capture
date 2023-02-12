@@ -33,3 +33,44 @@ export function getCapturedTargets(source?: HTMLElement): { element: HTMLElement
 
   return result.map((element) => ({ element, id: element.getAttribute('data-capture-target')! }));
 }
+
+export function getScreenRefreshRate(
+  callback: (fps: number, stampCollection: number[]) => void,
+  runIndefinitely: boolean
+) {
+  let requestId: number | null = null;
+  let callbackTriggered = false;
+  runIndefinitely = runIndefinitely || false;
+
+  let DOMHighResTimeStampCollection: number[] = [];
+
+  let triggerAnimation = function (DOMHighResTimeStamp: number) {
+    DOMHighResTimeStampCollection.unshift(DOMHighResTimeStamp);
+
+    if (DOMHighResTimeStampCollection.length > 10) {
+      let t0 = DOMHighResTimeStampCollection.pop()!;
+      let fps = Math.floor((1000 * 10) / (DOMHighResTimeStamp - t0));
+
+      if (!callbackTriggered) {
+        callback.call(undefined, fps, DOMHighResTimeStampCollection);
+      }
+
+      if (runIndefinitely) {
+        callbackTriggered = false;
+      } else {
+        callbackTriggered = true;
+      }
+    }
+
+    requestId = window.requestAnimationFrame(triggerAnimation);
+  };
+
+  window.requestAnimationFrame(triggerAnimation);
+
+  if (!runIndefinitely) {
+    window.setTimeout(function () {
+      requestId && window.cancelAnimationFrame(requestId);
+      requestId = null;
+    }, 500);
+  }
+}
