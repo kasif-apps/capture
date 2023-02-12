@@ -93,6 +93,7 @@ export const GridCapture: React.FC<{}> = () => {
     onCaptureTick,
     onCaptureEnd: handleCaptureEnd,
     onCaptureStart: handleCaptureStart,
+    constrain: true,
   });
 
   return (

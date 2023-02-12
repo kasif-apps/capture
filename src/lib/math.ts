@@ -54,11 +54,46 @@ export class Vector2D {
 }
 
 export class Area {
-  constructor(public start: Vector2D, public end: Vector2D) {}
+  constrainingRect: DOMRect | null = null;
+
+  constructor(public start: Vector2D, public end: Vector2D, constrainElement?: HTMLElement) {
+    if (constrainElement) {
+      this.constrainingRect = constrainElement.getBoundingClientRect();
+    }
+  }
 
   set(start: Vector2D, end: Vector2D) {
+    // if (this.constrainingRect) {
+    //   console.log('constrainingRect', this.constrainingRect, start, end);
+    //   if (start.y < this.constrainingRect.top) {
+    //     start.y = this.constrainingRect.top;
+    //   }
+    //   start.x = Math.max(start.x, Math.min(this.constrainingRect.left, this.constrainingRect.right));
+    //   start.y = Math.max(start.y, Math.min(this.constrainingRect.top, this.constrainingRect.bottom));
+    //   end.x = Math.min(end.x, this.constrainingRect.right);
+    //   end.y = Math.min(end.y, this.constrainingRect.bottom);
+    // }
+
     this.start = start;
     this.end = end;
+
+    if (this.constrainingRect) {
+      if (this.topLeft.x < this.constrainingRect.left) {
+        this.end.x = this.constrainingRect.left;
+      }
+
+      if (this.topLeft.y < this.constrainingRect.top) {
+        this.end.y = this.constrainingRect.top;
+      }
+
+      if (this.bottomRight.x > this.constrainingRect.right) {
+        this.end.x = this.constrainingRect.right;
+      }
+
+      if (this.bottomRight.y > this.constrainingRect.bottom) {
+        this.end.y = this.constrainingRect.bottom;
+      }
+    }
   }
 
   is(area: Area) {

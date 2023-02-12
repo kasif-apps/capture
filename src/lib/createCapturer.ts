@@ -21,13 +21,15 @@ export interface CaptureEdgeEvent {
 
 export interface CaptureOptions {
   manuelCommit?: boolean;
+  constrain?: boolean;
+  cancelOnMouseLeave?: boolean;
 }
 
 export function createCapturer<T extends HTMLElement>(element: T, options: CaptureOptions) {
   let isDragging = false;
-  let area = new Area(new Vector2D(0, 0), new Vector2D(0, 0));
   let start = new Vector2D(0, 0);
   let end = new Vector2D(0, 0);
+  let area = new Area(start, end, options.constrain ? element : undefined);
   let shouldDispatch = false;
   let lastEvent: MouseEvent | null = null;
 
@@ -102,6 +104,11 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
     }
   };
 
+  const cancel = () => {
+    isDragging = false;
+    shouldDispatch = false;
+  };
+
   const handleMouseDown = (event: MouseEvent) => {
     if (
       event.button === 0 &&
@@ -122,6 +129,13 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
   };
 
   const handleMouseMove = (event: MouseEvent) => {
+    const mouseLeft =
+      event.x < 0 || event.y < 0 || event.x > window.innerWidth || event.y > window.innerHeight;
+    if (mouseLeft && options.cancelOnMouseLeave) {
+      handleMouseLeave(event);
+      return;
+    }
+
     if (isDragging) {
       end.set(event.pageX, event.pageY);
       area.set(start, end);
@@ -149,6 +163,17 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
     }
   };
 
+  const handleMouseLeave = (event: MouseEvent) => {
+    cancel();
+    start.set(0, 0);
+    end.set(0, 0);
+    area.set(start, end);
+    element.dispatchEvent(
+      new CustomEvent('capture-end', { detail: { area: area, mouseEvent: event } })
+    );
+    commit(event);
+  };
+
   const handleCaptureCommit = () => {
     commit(lastEvent!);
   };
@@ -157,6 +182,7 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
   document.addEventListener('mousedown', handleMouseDown);
   document.addEventListener('mouseup', handleMouseUp);
   document.addEventListener('mousemove', handleMouseMove);
+  options.cancelOnMouseLeave && document.addEventListener('mouseleave', handleMouseLeave);
 
   let animation: number;
 
@@ -202,6 +228,7 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
       document.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mousemove', handleMouseMove);
+      options.cancelOnMouseLeave && document.removeEventListener('mouseleave', handleMouseUp);
       element.removeAttribute('data-capture-source');
       for (let i = 0; i < capturables.length; i++) {
         capturables[i].removeAttribute('data-captured');
@@ -210,9 +237,6 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
       lastEvent = null;
       observer.disconnect();
     },
-    cancel: () => {
-      isDragging = false;
-      shouldDispatch = false;
-    },
+    cancel,
   };
 }
