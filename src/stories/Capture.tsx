@@ -17,10 +17,10 @@ export const Capture: React.FC<{ type: 'basic' | 'grid' }> = (props) => {
 
 export const BasicCapture: React.FC<{}> = () => {
   const [captured, setCaptured] = useState(false);
-  const { ref: captureFieldRef, onCapture, onCaptureEnd } = useCaptureField();
+  const { ref: captureFieldRef, onCaptureTick, onCaptureEnd } = useCaptureField();
 
   const { ref } = useCapture<HTMLDivElement>({
-    onCapture,
+    onCaptureTick,
     onCaptureEnd,
   });
 
@@ -54,7 +54,7 @@ export const BasicCapture: React.FC<{}> = () => {
 };
 
 export const GridCapture: React.FC<{}> = () => {
-  const { ref: captureFieldRef, onCapture, onCaptureEnd } = useCaptureField();
+  const { ref: captureFieldRef, onCaptureTick, onCaptureEnd } = useCaptureField();
   const [storedItems, setStoredItems] = useState<string[]>([]);
   const shouldKeep = useRef(false);
 
@@ -85,7 +85,7 @@ export const GridCapture: React.FC<{}> = () => {
   }, []);
 
   const { ref } = useCapture<HTMLDivElement>({
-    onCapture,
+    onCaptureTick,
     onCaptureEnd: handleCaptureEnd,
     onCaptureStart: handleCaptureStart,
   });
@@ -134,7 +134,7 @@ export const GridCapture: React.FC<{}> = () => {
 function useCaptureField() {
   const ref = useRef<HTMLDivElement>(null);
 
-  const onCapture = useCallback(
+  const onCaptureTick = useCallback(
     (event: CustomEvent<CaptureTickEvent>) => {
       if (ref.current && event.detail.updated) {
         const { area } = event.detail;
@@ -158,7 +158,7 @@ function useCaptureField() {
 
   return {
     ref: ref,
-    onCapture: onCapture,
+    onCaptureTick: onCaptureTick,
     onCaptureEnd: onCaptureEnd,
   };
 }

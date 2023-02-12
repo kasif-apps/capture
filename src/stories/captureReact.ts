@@ -1,6 +1,18 @@
 import React, { useRef, useEffect } from 'react';
-import { CaptureOptions, createCapturer, CaptureChangeEvent } from '../lib';
+import {
+  CaptureOptions,
+  createCapturer,
+  CaptureChangeEvent,
+  CaptureTickEvent,
+  CaptureEdgeEvent,
+} from '../lib';
 import { useResizeObserver } from './useResizeObserver';
+
+export interface CaptureOptions {
+  onCaptureTick?: (event: CustomEvent<CaptureTickEvent>) => void;
+  onCaptureEnd?: (event: CustomEvent<CaptureEdgeEvent>) => void;
+  onCaptureStart?: (event: CustomEvent<CaptureEdgeEvent>) => void;
+}
 
 export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
   const [ref, rect] = useResizeObserver<T>();
@@ -8,11 +20,29 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
 
   useEffect(() => {
     if (ref.current) {
-      const { unsubscribe, cancel: c } = createCapturer(ref.current, options);
+      const { unsubscribe, cancel: c } = createCapturer(ref.current);
       cancel.current = c;
+
+      if (options.onCaptureTick) {
+        ref.current.addEventListener('capture-tick', options.onCaptureTick as EventListener);
+      }
+
+      if (options.onCaptureEnd) {
+        ref.current.addEventListener('capture-end', options.onCaptureEnd as EventListener);
+      }
+
+      if (options.onCaptureStart) {
+        ref.current.addEventListener('capture-start', options.onCaptureStart as EventListener);
+      }
 
       return () => {
         unsubscribe();
+
+        if (ref.current) {
+          ref.current.removeEventListener('capture-tick', options.onCaptureTick as EventListener);
+          ref.current.removeEventListener('capture-end', options.onCaptureEnd as EventListener);
+          ref.current.removeEventListener('capture-start', options.onCaptureStart as EventListener);
+        }
       };
     }
   }, [ref, rect]);

@@ -110,7 +110,7 @@ export class Area {
     return new Vector2D(Math.max(this.start.x, this.end.x), Math.max(this.start.y, this.end.y));
   }
 
-  get points() {
+  get points(): [Vector2D, Vector2D, Vector2D, Vector2D] {
     return [this.topLeft, this.topRight, this.bottomRight, this.bottomLeft];
   }
 
@@ -125,7 +125,12 @@ export class Area {
 
   static fromElement(element: HTMLElement, buffer = new Vector2D(0, 0)) {
     const boundingRect = element.getBoundingClientRect();
-    const rect = { top: boundingRect.top, left: boundingRect.left, bottom: boundingRect.bottom, right: boundingRect.right };
+    const rect = {
+      top: boundingRect.top,
+      left: boundingRect.left,
+      bottom: boundingRect.bottom,
+      right: boundingRect.right,
+    };
     rect.top += buffer.y;
     rect.left += buffer.x;
 

@@ -1,12 +1,6 @@
 import { Area, Vector2D } from './math';
 import { getScroll, hasDataAttribute } from './util';
 
-export interface CaptureOptions {
-  onCapture?: (event: CustomEvent<CaptureTickEvent>) => void;
-  onCaptureEnd?: (event: CustomEvent<CaptureEdgeEvent>) => void;
-  onCaptureStart?: (event: CustomEvent<CaptureEdgeEvent>) => void;
-}
-
 export interface CaptureChangeEvent {
   area: Area;
   captured: boolean;
@@ -25,7 +19,7 @@ export interface CaptureEdgeEvent {
   mouseEvent: MouseEvent;
 }
 
-export function createCapturer<T extends HTMLElement>(element: T, options: CaptureOptions) {
+export function createCapturer<T extends HTMLElement>(element: T) {
   let isDragging = false;
   let area = new Area(new Vector2D(0, 0), new Vector2D(0, 0));
   let start = new Vector2D(0, 0);
@@ -86,13 +80,12 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
       hasDataAttribute(event, 'data-capture-source') &&
       !hasDataAttribute(event, 'data-non-capture-source')
     ) {
-      if (options.onCaptureStart) {
-        options.onCaptureStart(
-          new CustomEvent('capture-start', {
-            detail: { area: area, mouseEvent: event },
-          })
-        );
-      }
+      element.dispatchEvent(
+        new CustomEvent('capture-start', {
+          detail: { area: area, mouseEvent: event },
+        })
+      );
+
       start.set(event.pageX, event.pageY);
       end.set(event.pageX, event.pageY);
       isDragging = true;
@@ -114,11 +107,9 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
       isDragging = false;
       area.set(start, end);
 
-      if (options.onCaptureEnd) {
-        options.onCaptureEnd(
-          new CustomEvent('capture-end', { detail: { area: area, mouseEvent: event } })
-        );
-      }
+      element.dispatchEvent(
+        new CustomEvent('capture-end', { detail: { area: area, mouseEvent: event } })
+      );
       start.set(0, 0);
       start.set(0, 0);
 
@@ -137,17 +128,15 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
   const animate = () => {
     if (isDragging) {
       area.set(start, end);
-      if (options.onCapture) {
-        options.onCapture(
-          new CustomEvent('capture', {
-            detail: {
-              area: area,
-              updated: shouldDispatch,
-              mouseEvent: lastEvent!,
-            },
-          })
-        );
-      }
+      element.dispatchEvent(
+        new CustomEvent('capture-tick', {
+          detail: {
+            area: area,
+            updated: shouldDispatch,
+            mouseEvent: lastEvent!,
+          },
+        })
+      );
       shouldDispatch = false;
     }
 
