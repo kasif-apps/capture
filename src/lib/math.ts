@@ -118,13 +118,11 @@ export class Area {
   static fromElement(element: HTMLElement, buffer = new Vector2D(0, 0)) {
     const boundingRect = element.getBoundingClientRect();
     const rect = {
-      top: boundingRect.top,
-      left: boundingRect.left,
-      bottom: boundingRect.bottom,
-      right: boundingRect.right,
+      top: boundingRect.top + buffer.y,
+      left: boundingRect.left + buffer.x,
+      bottom: boundingRect.bottom + buffer.y,
+      right: boundingRect.right + buffer.x,
     };
-    rect.top += buffer.y;
-    rect.left += buffer.x;
 
     return new Area(new Vector2D(rect.left, rect.top), new Vector2D(rect.right, rect.bottom));
   }

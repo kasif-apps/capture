@@ -20,3 +20,9 @@ export const Grid = Template.bind({});
 Grid.args = {
   type: 'grid',
 };
+
+export const Scroll = Template.bind({});
+
+Scroll.args = {
+  type: 'scroll',
+};

@@ -38,7 +38,6 @@ export function createCapturer<T extends HTMLElement>(element: T) {
   const notifyCapturables = (event: MouseEvent, bypass = false) => {
     capturables.forEach((element) => {
       const id = element.getAttribute('data-capture-target');
-      const captured = !!element.getAttribute('data-captured');
 
       if (bypass) {
         element.dispatchEvent(
@@ -46,9 +45,11 @@ export function createCapturer<T extends HTMLElement>(element: T) {
             detail: { area, captured: false, id, mouseEvent: event },
           })
         );
+        element.setAttribute('data-captured', 'false');
         return;
       }
 
+      const captured = !!element.getAttribute('data-captured');
       const intersects = Area.fromElement(element, getScroll(element)).intersects(area);
 
       if (intersects && captured) {
@@ -70,8 +71,8 @@ export function createCapturer<T extends HTMLElement>(element: T) {
   };
 
   const handleMouseDown = (event: MouseEvent) => {
-    notifyCapturables(event, true);
     if (
+      event.button === 0 &&
       hasDataAttribute(event, 'data-capture-source') &&
       !hasDataAttribute(event, 'data-non-capture-source')
     ) {
@@ -84,6 +85,7 @@ export function createCapturer<T extends HTMLElement>(element: T) {
       start.set(event.pageX, event.pageY);
       end.set(event.pageX, event.pageY);
       isDragging = true;
+      notifyCapturables(event, true);
     }
   };
 
@@ -105,12 +107,9 @@ export function createCapturer<T extends HTMLElement>(element: T) {
       element.dispatchEvent(
         new CustomEvent('capture-end', { detail: { area: area, mouseEvent: event } })
       );
-      start.set(0, 0);
-      start.set(0, 0);
 
-      capturables.forEach((element) => {
-        element.setAttribute('data-captured', 'false');
-      });
+      start.set(0, 0);
+      notifyCapturables(event, true);
     }
   };
 
