@@ -1,26 +1,22 @@
 import React, { useRef, useEffect } from 'react';
-import {
-  createCapturer,
-  CaptureChangeEvent,
-  CaptureTickEvent,
-  CaptureEdgeEvent,
-} from '../lib';
+import { createCapturer, CaptureChangeEvent, CaptureTickEvent, CaptureEdgeEvent } from '../lib';
+import { CaptureOptions } from '../lib/createCapturer';
 import { useResizeObserver } from './useResizeObserver';
 
-export interface CaptureOptions {
+export interface ReactCaptureOptions extends CaptureOptions {
   onCaptureTick?: (event: CustomEvent<CaptureTickEvent>) => void;
   onCaptureEnd?: (event: CustomEvent<CaptureEdgeEvent>) => void;
   onCaptureStart?: (event: CustomEvent<CaptureEdgeEvent>) => void;
 }
 
-export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
+export function useCapture<T extends HTMLElement>(options: ReactCaptureOptions) {
   const [ref, rect] = useResizeObserver<T>();
   const cancel = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (ref.current) {
-      const { destroy, cancel: c } = createCapturer(ref.current);
-      cancel.current = c;
+      const { destroy, cancel: cncl } = createCapturer(ref.current, options);
+      cancel.current = cncl;
 
       if (options.onCaptureTick) {
         ref.current.addEventListener('capture-tick', options.onCaptureTick as EventListener);
@@ -50,7 +46,7 @@ export function useCapture<T extends HTMLElement>(options: CaptureOptions) {
     cancel.current();
   }, [rect]);
 
-  return { ref, cancel };
+  return { ref, cancel: cancel.current };
 }
 
 export const CaptureTarget: React.FC<{

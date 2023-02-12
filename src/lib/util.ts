@@ -74,3 +74,34 @@ export function getScreenRefreshRate(
     }, 500);
   }
 }
+
+export function animate(callbackfn: (animation: number) => void) {
+  let animation: number;
+  let elapsed: number = 0;
+  let then: number = Date.now();
+  let fpsInterval: number;
+  let now: number;
+
+  function startAnimating(fps: number) {
+    fpsInterval = 1000 / fps;
+    then = Date.now();
+    animate();
+  }
+
+  function animate() {
+    animation = requestAnimationFrame(animate);
+
+    now = Date.now();
+    elapsed = now - then;
+
+    if (elapsed > fpsInterval) {
+      then = now - (elapsed % fpsInterval);
+
+      callbackfn(animation);
+    }
+  }
+
+  getScreenRefreshRate((rate) => {
+    startAnimating(rate);
+  }, false);
+}

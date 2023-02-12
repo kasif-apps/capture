@@ -1,6 +1,4 @@
-import React from 'react';
-import { useCallback } from 'react';
-import { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 
 import { CaptureEdgeEvent, CaptureTickEvent, getCapturedTargets } from '../lib/index';
 
@@ -233,7 +231,7 @@ export const LoadTestCapture: React.FC<{}> = () => {
     }
   }, []);
 
-  const handleCaptureEnd = useCallback(() => {
+  const handleCaptureEnd = useCallback((e: CustomEvent<CaptureEdgeEvent>) => {
     onCaptureEnd();
 
     const targets = getCapturedTargets().map((t) => t.id);
@@ -246,11 +244,16 @@ export const LoadTestCapture: React.FC<{}> = () => {
 
     shouldKeep.current = false;
   }, []);
+  
+  useEffect(() => {
+    ref.current?.dispatchEvent(new CustomEvent('capture-commit'));
+  }, [storedItems]);
 
   const { ref } = useCapture<HTMLDivElement>({
     onCaptureTick,
     onCaptureEnd: handleCaptureEnd,
     onCaptureStart: handleCaptureStart,
+    manuelCommit: true,
   });
 
   return (

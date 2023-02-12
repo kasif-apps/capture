@@ -1,5 +1,5 @@
 import { Area, Vector2D } from './math';
-import { getScreenRefreshRate, getScroll, hasDataAttribute } from './util';
+import { animate, getScroll, hasDataAttribute } from './util';
 
 export interface CaptureChangeEvent {
   area: Area;
@@ -19,7 +19,11 @@ export interface CaptureEdgeEvent {
   mouseEvent: MouseEvent;
 }
 
-export function createCapturer<T extends HTMLElement>(element: T) {
+export interface CaptureOptions {
+  manuelCommit?: boolean;
+}
+
+export function createCapturer<T extends HTMLElement>(element: T, options: CaptureOptions) {
   let isDragging = false;
   let area = new Area(new Vector2D(0, 0), new Vector2D(0, 0));
   let start = new Vector2D(0, 0);
@@ -75,13 +79,17 @@ export function createCapturer<T extends HTMLElement>(element: T) {
   }
 
   const notifyCapturables = (event: MouseEvent, bypass = false) => {
+    if (bypass) {
+      for (let i = 0; i < capturables.length; i++) {
+        const element = capturables[i];
+        const id = element.getAttribute('data-capture-target')!;
+        changeCaptureState(false, element, id, event);
+      }
+      return;
+    }
+
     for (let i = 0; i < visibleCapturables.length; i++) {
       const { element, area: capturableArea, id } = visibleCapturables[i];
-
-      if (bypass) {
-        changeCaptureState(false, element, id, event);
-        return;
-      }
 
       const captured = !!element.getAttribute('data-captured');
       const intersects = capturableArea.intersects(area);
@@ -132,25 +140,20 @@ export function createCapturer<T extends HTMLElement>(element: T) {
         new CustomEvent('capture-end', { detail: { area: area, mouseEvent: event } })
       );
 
-      const invisibleCapturables = capturables.filter(
-        (capturable) => !visibleCapturables.find((data) => data.id === capturable.id)
-      );
-
-      for (let i = 0; i < invisibleCapturables.length; i++) {
-        const element = invisibleCapturables[i];
-        const id = element.getAttribute('data-capture-target')!;
-        const captured = !!element.getAttribute('data-captured');
-
-        if (captured) {
-          changeCaptureState(false, element, id, event);
-        }
-      }
-
       start.set(0, 0);
-      notifyCapturables(event, true);
+      end.set(0, 0);
+
+      if (options.manuelCommit !== true) {
+        commit(event);
+      }
     }
   };
 
+  const handleCaptureCommit = () => {
+    commit(lastEvent!);
+  };
+
+  element.addEventListener('capture-commit', handleCaptureCommit);
   document.addEventListener('mousedown', handleMouseDown);
   document.addEventListener('mouseup', handleMouseUp);
   document.addEventListener('mousemove', handleMouseMove);
@@ -174,9 +177,28 @@ export function createCapturer<T extends HTMLElement>(element: T) {
     }
   });
 
+  function commit(event: MouseEvent) {
+    const invisibleCapturables = capturables.filter(
+      (capturable) => !visibleCapturables.find((data) => data.id === capturable.id)
+    );
+
+    for (let i = 0; i < invisibleCapturables.length; i++) {
+      const element = invisibleCapturables[i];
+      const id = element.getAttribute('data-capture-target')!;
+      const captured = !!element.getAttribute('data-captured');
+
+      if (captured) {
+        changeCaptureState(false, element, id, event);
+      }
+    }
+
+    notifyCapturables(event, true);
+  }
+
   return {
     destroy: () => {
       cancelAnimationFrame(animation);
+      element.removeEventListener('capture-commit', handleCaptureCommit);
       document.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mousemove', handleMouseMove);
@@ -193,35 +215,4 @@ export function createCapturer<T extends HTMLElement>(element: T) {
       shouldDispatch = false;
     },
   };
-}
-
-function animate(callbackfn: (animation: number) => void) {
-  let animation: number;
-  let elapsed: number = 0;
-  let then: number = Date.now();
-  let fpsInterval: number;
-  let now: number;
-
-  function startAnimating(fps: number) {
-    fpsInterval = 1000 / fps;
-    then = Date.now();
-    animate();
-  }
-
-  function animate() {
-    animation = requestAnimationFrame(animate);
-
-    now = Date.now();
-    elapsed = now - then;
-
-    if (elapsed > fpsInterval) {
-      then = now - (elapsed % fpsInterval);
-
-      callbackfn(animation);
-    }
-  }
-
-  getScreenRefreshRate((rate) => {
-    startAnimating(rate);
-  }, false);
 }
