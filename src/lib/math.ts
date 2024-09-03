@@ -55,25 +55,15 @@ export class Vector2D {
 
 export class Area {
   constrainingRect: DOMRect | null = null;
+  public start!: Vector2D
+  public end!: Vector2D
 
-  constructor(public start: Vector2D, public end: Vector2D, constrainElement?: HTMLElement) {
-    if (constrainElement) {
-      this.constrainingRect = constrainElement.getBoundingClientRect();
-    }
+  constructor(start: Vector2D, end: Vector2D, constrainElement?: HTMLElement) {
+    this.constrainingRect = constrainElement?.getBoundingClientRect() || null;
+    this.set(start, end)
   }
 
   set(start: Vector2D, end: Vector2D) {
-    // if (this.constrainingRect) {
-    //   console.log('constrainingRect', this.constrainingRect, start, end);
-    //   if (start.y < this.constrainingRect.top) {
-    //     start.y = this.constrainingRect.top;
-    //   }
-    //   start.x = Math.max(start.x, Math.min(this.constrainingRect.left, this.constrainingRect.right));
-    //   start.y = Math.max(start.y, Math.min(this.constrainingRect.top, this.constrainingRect.bottom));
-    //   end.x = Math.min(end.x, this.constrainingRect.right);
-    //   end.y = Math.min(end.y, this.constrainingRect.bottom);
-    // }
-
     this.start = start;
     this.end = end;
 

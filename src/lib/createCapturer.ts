@@ -58,7 +58,12 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
         if (entry.isIntersecting) {
           visibleCapturables.push(data);
         } else {
-          visibleCapturables = visibleCapturables.filter((capturable) => capturable.id !== data.id);
+          // do not remove possible capture targets when scrolling
+          if (isDragging) {
+            visibleCapturables = visibleCapturables.filter(
+              (capturable) => capturable.id !== data.id
+            );
+          }
         }
       }
     },
@@ -92,9 +97,14 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
 
     for (let i = 0; i < visibleCapturables.length; i++) {
       const { element, area: capturableArea, id } = visibleCapturables[i];
+      const elementScroll = getScroll(element);
+      const fixedArea = new Area(
+        Vector2D.subtract(capturableArea.start, elementScroll),
+        Vector2D.subtract(capturableArea.end, elementScroll)
+      );
 
       const captured = !!element.getAttribute('data-captured');
-      const intersects = capturableArea.intersects(area);
+      const intersects = fixedArea.intersects(area);
 
       if (intersects && captured) {
         changeCaptureState(true, element, id, event);
@@ -174,11 +184,16 @@ export function createCapturer<T extends HTMLElement>(element: T, options: Captu
     commit(event);
   };
 
+  const handleScroll = () => {
+    shouldDispatch = true;
+  };
+
   const handleCaptureCommit = () => {
     commit(lastEvent!);
   };
 
   element.addEventListener('capture-commit', handleCaptureCommit);
+  element.addEventListener('scroll', handleScroll);
   document.addEventListener('mousedown', handleMouseDown);
   document.addEventListener('mouseup', handleMouseUp);
   document.addEventListener('mousemove', handleMouseMove);

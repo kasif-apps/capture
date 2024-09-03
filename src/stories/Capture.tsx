@@ -5,20 +5,37 @@ import { CaptureEdgeEvent, CaptureTickEvent, getCapturedTargets } from '../lib/i
 import styles from './Capture.module.css';
 import { useCapture, CaptureTarget } from './captureReact';
 
-export const Capture: React.FC<{ type: 'basic' | 'grid' | 'scroll' | 'load-test' }> = (props) => {
-  switch (props.type) {
-    case 'basic':
-      return <BasicCapture />;
-    case 'grid':
-      return <GridCapture />;
-    case 'scroll':
-      return <ScrollCapture />;
-    case 'load-test':
-      return <LoadTestCapture />;
-    default:
-      return <BasicCapture />;
-  }
-};
+function useCaptureField() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const onCaptureTick = useCallback(
+    (event: CustomEvent<CaptureTickEvent>) => {
+      if (ref.current && event.detail.updated) {
+        const { area } = event.detail;
+        ref.current.style.left = `${area.topLeft.x}px`;
+        ref.current.style.top = `${area.topLeft.y}px`;
+        ref.current.style.width = `${area.width}px`;
+        ref.current.style.height = `${area.height}px`;
+      }
+    },
+    [ref.current]
+  );
+
+  const onCaptureEnd = useCallback(() => {
+    if (ref.current) {
+      ref.current.style.left = '0px';
+      ref.current.style.top = '0px';
+      ref.current.style.width = '0px';
+      ref.current.style.height = '0px';
+    }
+  }, [ref.current]);
+
+  return {
+    ref,
+    onCaptureTick,
+    onCaptureEnd,
+  };
+}
 
 export const BasicCapture: React.FC<{}> = () => {
   const [captured, setCaptured] = useState(false);
@@ -51,7 +68,7 @@ export const BasicCapture: React.FC<{}> = () => {
             <b>hi</b>
           </div>
         </CaptureTarget>
-        <div ref={captureFieldRef} className={styles.captureField}></div>
+        <div ref={captureFieldRef} className={styles.captureField} />
       </div>
       <p data-capture-target="30">Outside capture</p>
     </>
@@ -107,6 +124,7 @@ export const GridCapture: React.FC<{}> = () => {
               <div
                 data-non-capture-source
                 role="button"
+                tabIndex={0}
                 onClick={(e) => {
                   if (e.shiftKey) {
                     if (storedItems.includes(getID(i))) {
@@ -132,7 +150,7 @@ export const GridCapture: React.FC<{}> = () => {
             </CaptureTarget>
           ))}
       </div>
-      <div ref={captureFieldRef} className={styles.captureField}></div>
+      <div ref={captureFieldRef} className={styles.captureField} />
     </div>
   );
 };
@@ -185,6 +203,7 @@ export const ScrollCapture: React.FC<{}> = () => {
               <div
                 data-non-capture-source
                 role="button"
+                tabIndex={0}
                 onClick={(e) => {
                   if (e.shiftKey) {
                     if (storedItems.includes(getID(i))) {
@@ -210,7 +229,7 @@ export const ScrollCapture: React.FC<{}> = () => {
             </CaptureTarget>
           ))}
       </div>
-      <div ref={captureFieldRef} className={styles.captureField}></div>
+      <div ref={captureFieldRef} className={styles.captureField} />
     </div>
   );
 };
@@ -245,10 +264,6 @@ export const LoadTestCapture: React.FC<{}> = () => {
 
     shouldKeep.current = false;
   }, []);
-  
-  useEffect(() => {
-    ref.current?.dispatchEvent(new CustomEvent('capture-commit'));
-  }, [storedItems]);
 
   const { ref } = useCapture<HTMLDivElement>({
     onCaptureTick,
@@ -256,6 +271,10 @@ export const LoadTestCapture: React.FC<{}> = () => {
     onCaptureStart: handleCaptureStart,
     manuelCommit: true,
   });
+
+  useEffect(() => {
+    ref.current?.dispatchEvent(new CustomEvent('capture-commit'));
+  }, [storedItems]);
 
   return (
     <div className={[styles.wrapper, styles.resizeBoth].join(' ')} ref={ref}>
@@ -268,6 +287,7 @@ export const LoadTestCapture: React.FC<{}> = () => {
               <div
                 data-non-capture-source
                 role="button"
+                tabIndex={0}
                 onClick={(e) => {
                   if (e.shiftKey) {
                     if (storedItems.includes(getID(i))) {
@@ -293,39 +313,22 @@ export const LoadTestCapture: React.FC<{}> = () => {
             </CaptureTarget>
           ))}
       </div>
-      <div ref={captureFieldRef} className={styles.captureField}></div>
+      <div ref={captureFieldRef} className={styles.captureField} />
     </div>
   );
 };
 
-function useCaptureField() {
-  const ref = useRef<HTMLDivElement>(null);
-
-  const onCaptureTick = useCallback(
-    (event: CustomEvent<CaptureTickEvent>) => {
-      if (ref.current && event.detail.updated) {
-        const { area } = event.detail;
-        ref.current.style.left = `${area.topLeft.x}px`;
-        ref.current.style.top = `${area.topLeft.y}px`;
-        ref.current.style.width = `${area.width}px`;
-        ref.current.style.height = `${area.height}px`;
-      }
-    },
-    [ref.current]
-  );
-
-  const onCaptureEnd = useCallback(() => {
-    if (ref.current) {
-      ref.current.style.left = '0px';
-      ref.current.style.top = '0px';
-      ref.current.style.width = '0px';
-      ref.current.style.height = '0px';
-    }
-  }, [ref.current]);
-
-  return {
-    ref: ref,
-    onCaptureTick: onCaptureTick,
-    onCaptureEnd: onCaptureEnd,
-  };
-}
+export const Capture: React.FC<{ type: 'basic' | 'grid' | 'scroll' | 'load-test' }> = (props) => {
+  switch (props.type) {
+    case 'basic':
+      return <BasicCapture />;
+    case 'grid':
+      return <GridCapture />;
+    case 'scroll':
+      return <ScrollCapture />;
+    case 'load-test':
+      return <LoadTestCapture />;
+    default:
+      return <BasicCapture />;
+  }
+};

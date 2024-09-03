@@ -1,5 +1,5 @@
 export { Vector2D, Area } from './math';
-export { getCapturedTargets } from './util';
+export { getCapturedTargets, getScroll, hasDataAttribute, getScreenRefreshRate } from './util';
 export { createCapturer } from './createCapturer';
 
 export type {

@@ -14,5 +14,9 @@ module.exports = {
     'max-classes-per-file': ['error', 5],
     'jsx-a11y/click-events-have-key-events': 'off',
     'consistent-return': 'off',
+    "no-shadow": "off",
+    "@typescript-eslint/no-shadow": "off",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": "off"
   },
 };
